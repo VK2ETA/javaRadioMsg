@@ -1,5 +1,0 @@
-Regarding rxtx
-
-To enable the imports, and stop the compiler errors, right click on the project and select libraries under properties.
-Select Add Jar/Folder and pick the RXTXcomm.jar file. 
-

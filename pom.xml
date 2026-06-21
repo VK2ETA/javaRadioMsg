@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>vk2eta</groupId>
+    <artifactId>javaRadioMsg</artifactId>
+    <version>3.4.0.0</version>
+    <packaging>jar</packaging>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <protobuf.version>3.25.1</protobuf.version>
+    </properties>
+    
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include>
+                </includes>
+            </resource>
+        </resources>
+        
+                <extensions>
+            <!-- Detects the OS classifier (os.detected.classifier) used by the protobuf plugin -->
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.1</version>
+            </extension>
+        </extensions>
+        
+        <plugins>
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.6.1</version>
+                <configuration>
+                    <protocArtifact>com.google.protobuf:protoc:3.25.1:exe:${os.detected.classifier}</protocArtifact>
+                    <protoSourceRoot>${project.basedir}/src/main/protobuf</protoSourceRoot>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <!-- Make sure this matches your actual package and main class name -->
+                    <mainClass>javaradiomsg.Main</mainClass>
+                </configuration>
+            </plugin>
+            <!-- To get a lib folder for all the required libs -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>javaradiomsg.Main</mainClass> <!-- Change to your Main class -->
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            
+            
+        </plugins>
+    </build>
+    
+    <repositories>
+        <repository>
+            <id>local-project-repo</id>
+            <url>file://${project.basedir}/lib</url>
+        </repository>
+    </repositories>
+    
+    <dependencies>
+        <dependency>
+            <groupId>gnu.io</groupId>
+            <artifactId>rxtxcomm</artifactId>
+            <version>2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.activation</groupId>
+            <artifactId>javax.activation</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>1.6.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.cliftonlabs</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>4.0.1</version>
+        </dependency>
+        <!-- 1. Jsoup (HTML Parser) -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.15.3</version>
+        </dependency>
+
+        <!-- 2. Google Libphonenumber (Phone Number Parsing & Validation) -->
+        <dependency>
+            <groupId>com.googlecode.libphonenumber</groupId>
+            <artifactId>libphonenumber</artifactId>
+            <version>8.10.22</version>
+        </dependency>
+
+        <!-- 3. Eclipse Paho MQTT v5 Client -->
+        <dependency>
+            <groupId>org.eclipse.paho</groupId>
+            <artifactId>org.eclipse.paho.mqttv5.client</artifactId>
+            <version>1.2.5</version>
+        </dependency>
+
+        <!-- 4. Apache WS Commons Utilities -->
+        <dependency>
+            <groupId>org.apache.ws.commons.util</groupId>
+            <artifactId>ws-commons-util</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+
+        <!-- 5. Apache XML-RPC Client -->
+        <dependency>
+            <groupId>org.apache.xmlrpc</groupId>
+            <artifactId>xmlrpc-client</artifactId>
+            <version>3.1.2</version>
+        </dependency>
+
+        <!-- 6. Apache XML-RPC Common -->
+        <dependency>
+            <groupId>org.apache.xmlrpc</groupId>
+            <artifactId>xmlrpc-common</artifactId>
+            <version>3.1.2</version>
+        </dependency>
+        <!-- Google Protocol Buffers -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
+
+    </dependencies>
+    
+</project>
