@@ -1,5 +1,5 @@
 /*
- * MeshGateway.java
+ * MeshGateway.java   WORK IN PROGRESS
  *
  * Copyright (C) 2018-2022 John Douyere (VK2ETA)
  *
@@ -77,9 +77,6 @@ Payload {
 INFO  | 19:59:39 11 [mqtt] Subscribe to msh/V/2/e/LongFast/+
 INFO  | 19:59:39 11 [mqtt] Subscribe to msh/V/2/e/mqtt/+
 INFO  | 19:59:39 11 [mqtt] Subscribe to msh/V/2/e/PKI/+
-* Requires Meshtastic firmware <= 2.7.5 that handles json mqtt message. 
-* Restriction: the "from" value HAS to be the node id of the gateway
-* This has been removed in 2.8.0. and only protobufs are available after that version.
 =================================================================
 * SEE https://github.com/meshtastic/mqtt-converter for conversion of json to protobuf for gateway retransmission
 =================================================================
@@ -120,10 +117,10 @@ import com.google.protobuf.ByteString;
 public class MeshGateway {
 
     MqttClient client;
-    String broker; //= "tcp://192.168.192.50:1883";
-    String clientId; // = "vk2eta-1";
-    String subTopic; // = "msh/V/#";
-    String pubTopic; // = "gateway";
+    String broker; 
+    String clientId;
+    String subTopic;
+    String pubTopic;
     int subQos; // = 1;
     int pubQos; // = 1;
     // Default encryption key is often AQ== (base64 for default channel)
@@ -137,21 +134,21 @@ public class MeshGateway {
     //private static final String PSK_BASE64 = "We+jq7vHYPgsO/7J8MirE/3S2fBhwkhJF4UR8LN1t1I=";
 
     MeshGateway() {
-        broker = "tcp://192.168.8.50:1883";
-        clientId = "vk2eta-1";
+        broker = "tcp://192.168.X.XXX:1883";
+        clientId = "client-1";
         subTopic = "msh/V/2/e/#";
         pubTopic = "gateway";
         subQos = 1;
         pubQos = 1;
-        String msg = "Hello MQTT";
+        String helloMsg = "javaRadioMsg Listening";
 
         try {
             client = new MqttClient(broker, clientId);
             setupMqttCallbacks();
-           MqttConnectionOptions options = new MqttConnectionOptions();
+            MqttConnectionOptions options = new MqttConnectionOptions();
             // Username and password used to connect to MQTT Broker
-            options.setUserName("valda");
-            options.setPassword("Elorac12".getBytes());
+            options.setUserName("testUsername");
+            options.setPassword("testPassword".getBytes());
             // Set whether to clear the session
             options.setCleanStart(true);
             // Set the heartbeat interval in seconds
@@ -162,7 +159,7 @@ public class MeshGateway {
             options.setAutomaticReconnect(true);
             client.connect(options);
             
-            MqttMessage message = new MqttMessage(msg.getBytes());
+            MqttMessage message = new MqttMessage(helloMsg.getBytes());
             message.setQos(pubQos);
             client.publish(pubTopic, message);
 

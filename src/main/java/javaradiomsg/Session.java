@@ -752,7 +752,7 @@ public class Session {
                 Main.txText += "Sorry, Not enabled\n";
             }
         }
-       
+
         //~GETTIDE Get Tide for a given station
         Pattern TDp = Pattern.compile("\\s*~GETTIDE\\s*(\\d+)");
         Matcher TDm = TDp.matcher(str);
@@ -765,20 +765,20 @@ public class Session {
                 Main.txText += "Sorry, Not enabled\n";
             }
         }
-        
+
         // ~GETBIN for TTY session...
-        Pattern GBm = Pattern.compile("^\\s*~GETBIN\\s(\\S+)");
-        Matcher gb = GBm.matcher(str);
+        Pattern GBp = Pattern.compile("^\\s*~GETBIN\\s(\\S+)");
+        Matcher GBm = GBp.matcher(str);
         //Open both ways 
         //if (Main.TTYConnected.equals("Connected") & gb.lookingAt()) {
-        if (gb.lookingAt()) {
+        if (GBm.lookingAt()) {
             foundMatchingCommand = true;
             String downloaddir = Main.homePath + Main.dirPrefix + "Downloads" + Main.separator;
 
             String codedFile = "";
             String token = "";
-            String myfile = gb.group(1);
-            String mypath = downloaddir + gb.group(1);
+            String myfile = GBm.group(1);
+            String mypath = downloaddir + GBm.group(1);
 
             if (mypath.length() > 0) {
 
@@ -791,129 +791,155 @@ public class Session {
                 } else {
                     //I am client
                     toCall = myserver;
-                    fromCall =  Main.mycall;       
+                    fromCall = Main.mycall;
                 }
+                //Check that the resulting path is still in the ~/.pskmail/Downloads directory
+                // This prevents access to files outside this directory like a "../Scripts/notApublicFile.sh" request.
+                if (RMsgUtil.isScriptInSafeDirectory(myfile, "Downloads")) {
 
-                FileInputStream in = null;
+                    FileInputStream in = null;
 
-                File incp = new File(mypath);
+                    File incp = new File(mypath);
 
-                FileInputStream fis = null;
-                boolean fileFound = true;
-                try {
-                    fis = new FileInputStream(incp);
-                } catch (FileNotFoundException ex) {
-                    fileFound = false;
-                    //Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                if (fileFound) {
-                    File outcp = new File(Main.homePath + Main.dirPrefix + "tmpfile");
-                    FileOutputStream fos = null;
+                    FileInputStream fis = null;
+                    boolean fileFound = true;
                     try {
-                        fos = new FileOutputStream(outcp);
+                        fis = new FileInputStream(incp);
                     } catch (FileNotFoundException ex) {
-                        Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
+                        fileFound = false;
+                        //Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
                     }
-
-                    try {
-                        byte[] buf = new byte[1024];
-                        int i = 0;
-                        while ((i = fis.read(buf)) != -1) {
-                            fos.write(buf, 0, i);
+                    if (fileFound) {
+                        File outcp = new File(Main.homePath + Main.dirPrefix + "tmpfile");
+                        FileOutputStream fos = null;
+                        try {
+                            fos = new FileOutputStream(outcp);
+                        } catch (FileNotFoundException ex) {
+                            Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                    } catch (Exception e) {
-                        Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, e);
-                    } finally {
-                        if (fis != null) {
-                            try {
-                                fis.close();
-                            } catch (IOException ex) {
-                                Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
+
+                        try {
+                            byte[] buf = new byte[1024];
+                            int i = 0;
+                            while ((i = fis.read(buf)) != -1) {
+                                fos.write(buf, 0, i);
+                            }
+                        } catch (Exception e) {
+                            Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, e);
+                        } finally {
+                            if (fis != null) {
+                                try {
+                                    fis.close();
+                                } catch (IOException ex) {
+                                    Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+                            if (fos != null) {
+                                try {
+                                    fos.close();
+                                } catch (IOException ex) {
+                                    Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
+                                }
                             }
                         }
-                        if (fos != null) {
-                            try {
-                                fos.close();
-                            } catch (IOException ex) {
-                                Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
+
+                        String mysourcefile = Main.homePath + Main.dirPrefix + "tmpfile";
+
+                        try {
+                            in = new FileInputStream(mysourcefile);
+                        } catch (FileNotFoundException ex) {
+                            Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                        GZIPOutputStream myzippedfile = null;
+
+                        String tmpfile = Main.homePath + Main.dirPrefix + "tmpfile.gz";
+
+                        try {
+                            myzippedfile = new GZIPOutputStream(new FileOutputStream(tmpfile));
+                        } catch (FileNotFoundException ex) {
+                            Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (IOException ioe) {
+                            Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ioe);
+                        }
+
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+
+                        try {
+                            while ((bytesRead = in.read(buffer)) != -1) {
+                                myzippedfile.write(buffer, 0, bytesRead);
+                            }
+                        } catch (IOException ex) {
+                            Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                        try {
+                            in.close();
+                            myzippedfile.close();
+                        } catch (IOException ex) {
+                            Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                        Random r = new Random();
+                        token = Long.toString(Math.abs(r.nextLong()), 12);
+                        token = "tmp" + token;
+
+                        //codedFile = Main.homePath + Main.dirPrefix + "Outpending" + Main.separator + token;
+                        codedFile = Main.homePath + Main.dirPrefix + "Outpending" + Main.separator
+                                + toCall.replaceAll("\\/", "+") + "_-u-_" + token + "_-" + myfile;
+                        Base64.encodeFileToFile(tmpfile, codedFile);
+                        File dlfile = new File(tmpfile);
+                        if (dlfile.exists()) {
+                            dlfile.delete();
+                        }
+                        File mycodedFile = new File(codedFile);
+                        //if (mycodedFile.isFile()) {
+                        //    TrString = ">FM:" + fromCall + ":" + toCall + ":"
+                        //            + token + ":u:" + myfile
+                        //            + ":" + Long.toString(mycodedFile.length()) + "\n";
+                        //}
+
+                        if (Main.connected) {
+                            if (mycodedFile.isFile()) {
+                                //Client or server? (File transfers work both ways regarless of who initated the connection)
+                                Main.txText += ">FM:" + fromCall + ":" + toCall + ":"
+                                        + token + ":u:" + myfile
+                                        + ":" + Long.toString(mycodedFile.length()) + "\n";
+                                String dataString = RMsgUtil.readFile(codedFile);
+                                Main.txText += dataString + "\n-end-\n";
+                                //Main.filetype = "u"; //To use when we receive the ~FY command from the client
                             }
                         }
-                    }
-
-                    String mysourcefile = Main.homePath + Main.dirPrefix + "tmpfile";
-
-                    try {
-                        in = new FileInputStream(mysourcefile);
-                    } catch (FileNotFoundException ex) {
-                        Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                    GZIPOutputStream myzippedfile = null;
-
-                    String tmpfile = Main.homePath + Main.dirPrefix + "tmpfile.gz";
-
-                    try {
-                        myzippedfile = new GZIPOutputStream(new FileOutputStream(tmpfile));
-                    } catch (FileNotFoundException ex) {
-                        Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (IOException ioe) {
-                        Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ioe);
-                    }
-
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-
-                    try {
-                        while ((bytesRead = in.read(buffer)) != -1) {
-                            myzippedfile.write(buffer, 0, bytesRead);
-                        }
-                    } catch (IOException ex) {
-                        Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                    try {
-                        in.close();
-                        myzippedfile.close();
-                    } catch (IOException ex) {
-                        Logger.getLogger(MainPskmailUi.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                    Random r = new Random();
-                    token = Long.toString(Math.abs(r.nextLong()), 12);
-                    token = "tmp" + token;
-
-                    //codedFile = Main.homePath + Main.dirPrefix + "Outpending" + Main.separator + token;
-                    codedFile = Main.homePath + Main.dirPrefix + "Outpending" + Main.separator
-                            + toCall.replaceAll("\\/", "+") + "_-u-_" + token + "_-" + myfile;
-                    Base64.encodeFileToFile(tmpfile, codedFile);
-                    File dlfile = new File(tmpfile);
-                    if (dlfile.exists()) {
-                        dlfile.delete();
-                    }
-                    String TrString = "";
-                    File mycodedFile = new File(codedFile);
-                    //if (mycodedFile.isFile()) {
-                    //    TrString = ">FM:" + fromCall + ":" + toCall + ":"
-                    //            + token + ":u:" + myfile
-                    //            + ":" + Long.toString(mycodedFile.length()) + "\n";
-                    //}
-
-                    if (Main.connected) {
-                        if (mycodedFile.isFile()) {
-                            //Client or server? (File transfers work both ways regarless of who initated the connection)
-                            Main.txText += ">FM:" + fromCall + ":" + toCall + ":"
-                                    + token + ":u:" + myfile
-                                    + ":" + Long.toString(mycodedFile.length()) + "\n";
-                            String dataString = RMsgUtil.readFile(codedFile);
-                            Main.txText += dataString + "\n-end-\n";
-                            //Main.filetype = "u"; //To use when we receive the ~FY command from the client
-                        }
+                    } else {
+                        Main.txText += "File " + myfile + " Not Found\n";
                     }
                 } else {
-                    Main.txText += "File " + myfile + " Not Found\n";
+                    Main.txText += "File " + myfile + " must be a simple file name, no path\n";
                 }
             }
         }
+        
+        
+        
+        //~RUN scriptname
+        //Executes a pre-made script in the .jPskmail/Scripts directory and ONLY in that directory (no path allowed), but arguments allowed
+        Pattern RunDp = Pattern.compile("^\\s*~RUN\\s(.+)");
+        Matcher RunDm = RunDp.matcher(str);
+        if (RunDm.lookingAt()) {
+            if (Main.ttyConnected.equals("Connected")) {
+                foundMatchingCommand = true;
+                String script = RunDm.group(1);
+                String[] parts = RunDm.group(1).trim().split("\\s+");                                                                                                               
+                  if (Main.wantServer) {                                                                                                                                              
+                      executeScript(parts[0], java.util.Arrays.copyOfRange(parts, 1, parts.length));                                                                                  
+                } else {
+                    Main.txText += "Sorry, Not enabled\n";
+                }
+            }
+        }
+
+
 
         //Not used at present
         // APRS positions 
@@ -963,7 +989,7 @@ public class Session {
             }
         }
 
-        // mail headers 
+        //Receiving mail headers 
         Pattern pm = Pattern.compile("^\\s*(Your\\smail:)\\s(\\d*)");
         Matcher mm = pm.matcher(str);
         if (mm.lookingAt()) {
@@ -1003,7 +1029,7 @@ public class Session {
                                     }                                    
          */
         
-        // file list
+        //Receiving file list
         Pattern pl = Pattern.compile("^\\s*(Your_files:)\\s(\\d+)");
         Matcher ml = pl.matcher(str);
         if (ml.lookingAt()) {
@@ -3286,6 +3312,214 @@ public class Session {
         Transaction = "";
 
     }
+    
+    
+       
+    static Process ScriptProcess = null;
+    static StringBuilder outBuffer = new StringBuilder(200);
+    static StringBuilder errBuffer = new StringBuilder(200);
+    static final java.util.concurrent.atomic.AtomicBoolean scriptRunning = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    //Runs the script in its own thread so the main loop is not blocked                                                                                                             
+    //scriptName is the bare script name (no path), args are optional                                                                                                               
+    public static void executeScript(final String scriptName, final String... args) {
+        if (!scriptRunning.compareAndSet(false, true)) {
+            Main.txText += "A script is already running, try again later\n";
+            return;
+        }
+        final String[] scriptArgs = (args == null) ? new String[0] : args.clone();
+        Thread scriptThread = new Thread(() -> {
+            try {
+                runScript(scriptName, scriptArgs);
+            } finally {
+                scriptRunning.set(false);
+            }
+        }, "ScriptRunner");
+        scriptThread.setDaemon(true);
+        scriptThread.start();
+    }
+
+    private static void runScript(String script, String[] args) {
+        outBuffer = new StringBuilder(200);
+        errBuffer = new StringBuilder(200);
+
+        if (!RMsgUtil.isScriptInSafeDirectory(script, Main.dirScripts)) {
+            Main.txText += "Can't run " + script + ", it must be in the Scripts directory of .pskmail";
+            return;
+        }
+
+        String fullScriptPath = Main.homePath + Main.dirPrefix + Main.dirScripts + Main.separator + script;
+        //Script path and each argument are separate list entries, so no shell parsing of the arguments                                                                             
+        java.util.List<String> cmd = new java.util.ArrayList<>();
+        if (Main.onWindows) {
+            cmd.add(fullScriptPath);
+        } else { //Linux: bash runs the script, "$@" in the script receives the arguments                                                                                                                                                                                    
+            cmd.add("bash");
+            cmd.add(fullScriptPath);
+        }
+        for (String arg : args) {
+            cmd.add(arg);
+        }
+        ProcessBuilder processBuilder = new ProcessBuilder(cmd);
+        try {
+            ScriptProcess = processBuilder.start();
+            //Launching using cmd.exe creates a subprocess for the script that is un-killable from Java                                                                             
+            //fldigiProc = Runtime.getRuntime().exec(fldigiPath);                                                                                                                   
+
+            //Prepare a thread to consume the Standard Output Stream                                                                                                                
+            Thread outputThread = new Thread(()
+                    -> readStream(ScriptProcess.getInputStream(), "STDOUT")
+            );
+            //Prepare a thread to consume the Standard Error Stream                                                                                                                 
+            Thread errorThread = new Thread(()
+                    -> readStream(ScriptProcess.getErrorStream(), "STDERR")
+            );
+            //Start both threads running in the background                                                                                                                          
+            outputThread.start();
+            errorThread.start();
+            //Wait for the external process to finish                                                                                                                               
+            int exitCode = ScriptProcess.waitFor();
+            //Wait for the reading threads to finish emptying the buffers                                                                                                           
+            outputThread.join();
+            errorThread.join();
+            //Process the result                                                                                                                                                    
+            System.out.println("\nProcess exited with code: " + exitCode);
+            String errString = errBuffer.toString();
+            //150 characters hard limit                                                                                                                                             
+            if (errString.length() > 200) {
+                errString = errString.substring(0, 200) + "...";
+            }
+            String outString = outBuffer.toString();
+            //150 characters hard limit                                                                                                                                             
+            if (outString.length() > 500) {
+                outString = outString.substring(0, 500) + "...";
+            }
+            if (!errString.isEmpty()) {
+                outString += "\n With error: " + errString;
+            }
+            StringBuilder arguments = new StringBuilder(100);
+            for (String argStr : args) {
+                String thisArg = " " + argStr;
+                arguments.append(thisArg);
+            }
+            Main.txText += "\n" + script + " " + arguments.toString() + " says:\n" + outString;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            if (!errBuffer.toString().isEmpty()) {
+                Main.txText += "Error running " + script + ": " + errBuffer.toString();
+            }
+            e.printStackTrace();
+        }
+    }
+
+              
+              
+              
+              
+              
+              
+              
+              
+    
+    /*
+    //Runs the script in its own thread so the main loop is not blocked
+    public static void executeScript(final String script) {
+        if (!scriptRunning.compareAndSet(false, true)) {
+            Main.txText += "A script is already running, try again later\n";
+            return;
+        }
+        Thread scriptThread = new Thread(() -> {
+            try {
+                runScript(script);
+            } finally {
+                scriptRunning.set(false);
+            }
+        }, "ScriptRunner");
+        scriptThread.setDaemon(true);
+        scriptThread.start();
+    }
+
+    private static void runScript(String script) {
+        outBuffer = new StringBuilder(200);
+        errBuffer = new StringBuilder(200);
+        
+        if (!RMsgUtil.isScriptInSafeDirectory(script, Main.dirScripts)) {
+            Main.txText += "Can't run " + script + ", it must be in the Scripts directory of .pskmail";
+            return;
+        }
+        
+       
+        String fullScriptPath = Main.homePath + Main.dirPrefix + Main.dirScripts + Main.separator + script;
+        ProcessBuilder processBuilder = new ProcessBuilder(fullScriptPath);     
+        try {
+            ProcessBuilder scriptProcessBuilder = new ProcessBuilder();
+            if (Main.onWindows) {
+                processBuilder.command(fullScriptPath);
+                ScriptProcess = scriptProcessBuilder.start();
+                //Launching using cmd.exe creates a subprocess for the script that is un-killable from Java
+                //fldigiProc = Runtime.getRuntime().exec(fldigiPath);
+            } else { //Linux
+                processBuilder.command("bash", "-c", fullScriptPath);
+                ScriptProcess = processBuilder.start();
+            }
+            //Prepare a thread to consume the Standard Output Stream
+            Thread outputThread = new Thread(()
+                    -> readStream(ScriptProcess.getInputStream(), "STDOUT")
+            );
+            //Prepare a thread to consume the Standard Error Stream
+            Thread errorThread = new Thread(()
+                    -> readStream(ScriptProcess.getErrorStream(), "STDERR")
+            );
+            //Start both threads running in the background
+            outputThread.start();
+            errorThread.start();
+            //Wait for the external process to finish
+            int exitCode = ScriptProcess.waitFor();
+            //Wait for the reading threads to finish emptying the buffers
+            outputThread.join();
+            errorThread.join();
+            //Process the result
+            System.out.println("\nProcess exited with code: " + exitCode);
+            String errString = errBuffer.toString();
+            //150 characters hard limit
+            if (errString.length() > 150) errString = errString.substring(0, 150) + "...";
+            String outString = outBuffer.toString();
+            //150 characters hard limit
+            if (outString.length() > 150) outString = outString.substring(0, 150) + "...";
+            if (!errString.isEmpty()) outString += "\n With error: " + errString;
+            Main.txText += script + " says:\n" + outString;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            if (!errBuffer.toString().isEmpty()) {
+                Main.txText += "Error running " + script + ": " + errBuffer.toString();
+            }
+            e.printStackTrace();
+        }
+    }
+
+  */      
+    // Helper method to read a stream line-by-line
+    public static void readStream(InputStream inputStream, String streamType) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // Route or process the data differently depending on the source stream
+                if ("STDERR".equals(streamType)) {
+                    errBuffer.append(line).append("\n");
+                    System.err.println("[" + streamType + "] " + line);
+                } else {
+                    outBuffer.append(line).append("\n");
+                    System.out.println("[" + streamType + "] " + line);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading " + streamType + " stream: " + e.getMessage());
+        }
+    }
+
+
 
 } // end of class
 

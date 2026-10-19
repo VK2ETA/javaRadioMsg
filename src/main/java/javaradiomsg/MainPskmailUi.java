@@ -1641,6 +1641,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
         CQButton = new javax.swing.JButton();
         PositButton = new javax.swing.JButton();
         SendButton = new javax.swing.JButton();
+        jButtonRunScript = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTextPane2 = new javax.swing.JTextPane();
         tabEmail = new javax.swing.JPanel();
@@ -1940,7 +1941,6 @@ public class MainPskmailUi extends javax.swing.JFrame {
             }
         });
 
-        tabTerminal.setMaximumSize(new java.awt.Dimension(32767, 32767));
         tabTerminal.setMinimumSize(new java.awt.Dimension(708, 306));
         tabTerminal.setName(""); // NOI18N
         tabTerminal.setLayout(new javax.swing.BoxLayout(tabTerminal, javax.swing.BoxLayout.PAGE_AXIS));
@@ -2004,8 +2004,8 @@ public class MainPskmailUi extends javax.swing.JFrame {
         SendButton.setForeground(new java.awt.Color(0, 102, 0));
         SendButton.setText(bundle.getString("MainPskmailUi.SendButton.text_1")); // NOI18N
         SendButton.setFocusPainted(false);
-        SendButton.setMaximumSize(new java.awt.Dimension(100, 25));
-        SendButton.setMinimumSize(new java.awt.Dimension(70, 25));
+        SendButton.setMaximumSize(new java.awt.Dimension(100, 20));
+        SendButton.setMinimumSize(new java.awt.Dimension(70, 20));
         SendButton.setPreferredSize(new java.awt.Dimension(100, 25));
         SendButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2013,6 +2013,20 @@ public class MainPskmailUi extends javax.swing.JFrame {
             }
         });
         pnlTerminalButtons.add(SendButton);
+
+        jButtonRunScript.setFont(new java.awt.Font("sansserif", 1, 11)); // NOI18N
+        jButtonRunScript.setForeground(new java.awt.Color(0, 102, 0));
+        jButtonRunScript.setText(bundle.getString("MainPskmailUi.jButtonRunScript.text")); // NOI18N
+        jButtonRunScript.setToolTipText(bundle.getString("mainpskmailui.runscriptbutton.tooltiptext")); // NOI18N
+        jButtonRunScript.setMaximumSize(new java.awt.Dimension(95, 25));
+        jButtonRunScript.setMinimumSize(new java.awt.Dimension(95, 25));
+        jButtonRunScript.setPreferredSize(new java.awt.Dimension(95, 25));
+        jButtonRunScript.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonRunScriptActionPerformed(evt);
+            }
+        });
+        pnlTerminalButtons.add(jButtonRunScript);
 
         tabTerminal.add(pnlTerminalButtons);
 
@@ -2089,8 +2103,6 @@ public class MainPskmailUi extends javax.swing.JFrame {
         });
         tblInbox.setSelectionBackground(new java.awt.Color(150, 150, 150));
         tblInbox.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        tblInbox.setShowHorizontalLines(false);
-        tblInbox.setShowVerticalLines(false);
         tblInbox.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent evt) {
                 tblInboxMousePressed(evt);
@@ -3309,7 +3321,6 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 tblRadioMsgs.setMinimumSize(new java.awt.Dimension(0, 0));
                 tblRadioMsgs.setSelectionBackground(new java.awt.Color(150, 150, 150));
                 tblRadioMsgs.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-                tblRadioMsgs.setShowVerticalLines(false);
                 tblRadioMsgs.getTableHeader().setReorderingAllowed(false);
                 tblRadioMsgs.addMouseListener(new java.awt.event.MouseAdapter() {
                     public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -3711,7 +3722,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
 
                 mnuConnection.setText(bundle.getString("MainPskmailUi.mnuConnection.text_1")); // NOI18N
 
-                Conn_connect.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.ALT_MASK));
+                Conn_connect.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.ALT_DOWN_MASK));
                 Conn_connect.setText(bundle.getString("MainPskmailUi.Conn_connect.text_1")); // NOI18N
                 Conn_connect.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -3720,7 +3731,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 });
                 mnuConnection.add(Conn_connect);
 
-                Conn_abort.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_A, java.awt.event.InputEvent.ALT_MASK));
+                Conn_abort.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_A, java.awt.event.InputEvent.ALT_DOWN_MASK));
                 Conn_abort.setText(bundle.getString("MainPskmailUi.Conn_abort.text_1")); // NOI18N
                 Conn_abort.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -3815,7 +3826,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 mnuFile2.add(jRadioButtonDelete);
                 mnuFile2.add(jSeparator5);
 
-                mnuQuit2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.ALT_MASK));
+                mnuQuit2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.ALT_DOWN_MASK));
                 mnuQuit2.setText(bundle.getString("MainPskmailUi.mnuQuit2.text_1")); // NOI18N
                 mnuQuit2.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4156,7 +4167,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                     }
                 });
 
-                Ping_menu_item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_MASK));
+                Ping_menu_item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_DOWN_MASK));
                 Ping_menu_item.setText(bundle.getString("MainPskmailUi.Ping_menu_item.text_1")); // NOI18N
                 Ping_menu_item.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4165,7 +4176,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 });
                 mnuLink.add(Ping_menu_item);
 
-                menuInquire.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_I, java.awt.event.InputEvent.CTRL_MASK));
+                menuInquire.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_I, java.awt.event.InputEvent.CTRL_DOWN_MASK));
                 menuInquire.setText(bundle.getString("MainPskmailUi.menuInquire.text_1")); // NOI18N
                 menuInquire.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4174,7 +4185,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 });
                 mnuLink.add(menuInquire);
 
-                timeSyncMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_T, java.awt.event.InputEvent.CTRL_MASK));
+                timeSyncMenuItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_T, java.awt.event.InputEvent.CTRL_DOWN_MASK));
                 timeSyncMenuItem.setText(mainpskmailui.getString("MainPskmailUi.TimeSync.MenuItem.text")); // NOI18N
                 timeSyncMenuItem.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4183,7 +4194,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 });
                 mnuLink.add(timeSyncMenuItem);
 
-                jMenuQuality.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
+                jMenuQuality.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_DOWN_MASK));
                 jMenuQuality.setText(bundle.getString("MainPskmailUi.jMenuQuality.text_1")); // NOI18N
                 jMenuQuality.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4192,7 +4203,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 });
                 mnuLink.add(jMenuQuality);
 
-                Link_menu_item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
+                Link_menu_item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_DOWN_MASK));
                 Link_menu_item.setText(bundle.getString("MainPskmailUi.Link_menu_item.text_1")); // NOI18N
                 Link_menu_item.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4201,7 +4212,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 });
                 mnuLink.add(Link_menu_item);
 
-                Beacon_menu_item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_B, java.awt.event.InputEvent.CTRL_MASK));
+                Beacon_menu_item.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_B, java.awt.event.InputEvent.CTRL_DOWN_MASK));
                 Beacon_menu_item.setText(bundle.getString("MainPskmailUi.Beacon_menu_item.text_1")); // NOI18N
                 Beacon_menu_item.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4210,7 +4221,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 });
                 mnuLink.add(Beacon_menu_item);
 
-                MnuTelnet.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_T, java.awt.event.InputEvent.CTRL_MASK));
+                MnuTelnet.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_T, java.awt.event.InputEvent.CTRL_DOWN_MASK));
                 MnuTelnet.setText(bundle.getString("MainPskmailUi.MnuTelnet.text_1")); // NOI18N
                 MnuTelnet.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4227,7 +4238,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 });
                 mnuLink.add(mnuMulticast);
 
-                Update_server.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_U, java.awt.event.InputEvent.CTRL_MASK));
+                Update_server.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_U, java.awt.event.InputEvent.CTRL_DOWN_MASK));
                 Update_server.setText(bundle.getString("MainPskmailUi.Update_server.text_1")); // NOI18N
                 Update_server.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4236,7 +4247,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 });
                 mnuLink.add(Update_server);
 
-                Resetrecord_mnu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, java.awt.event.InputEvent.CTRL_MASK));
+                Resetrecord_mnu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, java.awt.event.InputEvent.CTRL_DOWN_MASK));
                 Resetrecord_mnu.setText(bundle.getString("MainPskmailUi.Resetrecord_mnu.text_1")); // NOI18N
                 Resetrecord_mnu.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4245,7 +4256,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 });
                 mnuLink.add(Resetrecord_mnu);
 
-                Stoptransaction_mnu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Z, java.awt.event.InputEvent.CTRL_MASK));
+                Stoptransaction_mnu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Z, java.awt.event.InputEvent.CTRL_DOWN_MASK));
                 Stoptransaction_mnu.setText(bundle.getString("MainPskmailUi.Stoptransaction_mnu.text_1")); // NOI18N
                 Stoptransaction_mnu.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4266,7 +4277,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 });
                 mnuPrefsMain.add(mnuFqHelp);
 
-                mnuPreferences2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_E, java.awt.event.InputEvent.CTRL_MASK));
+                mnuPreferences2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_E, java.awt.event.InputEvent.CTRL_DOWN_MASK));
                 mnuPreferences2.setText(bundle.getString("MainPskmailUi.mnuPreferences2.text_1")); // NOI18N
                 mnuPreferences2.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4275,7 +4286,7 @@ public class MainPskmailUi extends javax.swing.JFrame {
                 });
                 mnuPrefsMain.add(mnuPreferences2);
 
-                PrefSaveMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
+                PrefSaveMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_DOWN_MASK));
                 PrefSaveMenu.setText(bundle.getString("MainPskmailUi.PrefSaveMenu.text_1")); // NOI18N
                 PrefSaveMenu.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -4700,8 +4711,8 @@ private void AbortButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-F
                     String file = txtMainEntry.getText();
                     if (file.length() > 0) {
                         Main.txText += "~GETBIN " + file + "\n";
-                        Main.q.Message(mainpskmailui.getString("Requsting_file_") + file, 5);
-                        Main.filesTextArea += mainpskmailui.getString("Requsting_file_") + file + "\n";
+                        Main.q.Message(mainpskmailui.getString("Requesting_file_") + file, 5);
+                        Main.filesTextArea += mainpskmailui.getString("Requesting_file_") + file + "\n";
                     } else {
                         Main.q.Message(mainpskmailui.getString("Which_file_shall_I_get?"), 5);
                     }
@@ -7770,6 +7781,23 @@ private void mnuHeadersFetchActionPerformed(java.awt.event.ActionEvent evt) {//G
         }
     }//GEN-LAST:event_bRMsgSendInquireActionPerformed
 
+    private void jButtonRunScriptActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRunScriptActionPerformed
+        //Get script and arguments
+        if (Main.connected) {
+            String script = txtMainEntry.getText();
+            if (script.length() > 0) {
+                Main.txText += "~RUN " + script + "\n";
+                Main.q.Message(mainpskmailui.getString("Requesting_script_launch") + script, 5);
+            } else {
+                Main.q.Message(mainpskmailui.getString("Which_script_to_run"), 5);
+            }
+        } else {
+            Main.q.Message(mainpskmailui.getString("You_need_to_connect_first..."), 5);
+        }
+
+        //Send to Server for execution
+    }//GEN-LAST:event_jButtonRunScriptActionPerformed
+
     /**
      * Simple message dialog with yes and no button
      *
@@ -8712,6 +8740,7 @@ private void mnuHeadersFetchActionPerformed(java.awt.event.ActionEvent evt) {//G
     private javax.swing.JTextField freq2;
     private javax.swing.JTextField freq3;
     private javax.swing.JTextField freq4;
+    private javax.swing.JButton jButtonRunScript;
     private javax.swing.JComboBox<String> jComboRMsgTo;
     private javax.swing.JComboBox<String> jComboRMsgVia;
     private javax.swing.JMenuItem jGetIAC;

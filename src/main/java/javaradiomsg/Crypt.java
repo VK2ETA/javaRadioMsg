@@ -14,7 +14,7 @@
 
 package javaradiomsg;
 
-import java.math.BigInteger;;
+import java.math.BigInteger;
 import java.util.Random;
 import java.security.*;
 

@@ -34,9 +34,9 @@ import javax.swing.JFrame;
 public class Main {
 
     //VK2ETA: Based on "jpskmail 1.7.b";
-    static String version = "3.4.0.0";
+    static String version = "3.4.0.1";
     static String application = "javaRadioMsg " + version;// Used to preset an empty status
-    static String versionDate = "20260618";
+    static String versionDate = "20261019";
     static String host = "localhost";
     static int port = 7322; //ARQ IP port
     static String xmlPort = "7362"; //XML IP port
@@ -68,6 +68,7 @@ public class Main {
     static final String dirImages = "RadioMsg-Images";
     static final String dirSendingAPI = "RadioMsgSending";
     static final String messageLogFile = "RadioMsg.log";
+    static final String dirScripts = "Scripts";
     //
     static String mailOutFile = "";
     static File pending = null;
@@ -310,6 +311,8 @@ public class Main {
     static public long lastCharacterTime = 0L;//Time of last character received from Modem
     static public boolean haveSOH = false; //We have received an SOH
     static public boolean receivedRsidAck = false; //When we receive and "EOL" RSID we interpret it as a positive ACK
+    
+    public static MeshGateway myMesh;
 
     /**
      * @param args the command line arguments
@@ -446,7 +449,7 @@ public class Main {
             }
             
             //Start MQTT connection to broker if selected
-            MeshGateway myMesh = new MeshGateway();
+            //Debug myMesh = new MeshGateway();
             
             //vk2eta debug
             //System.out.println("entering receive loop");
@@ -1922,6 +1925,11 @@ public class Main {
             File RadioMsgArchive = new File(homePath + dirPrefix + dirArchive + separator);
             if (!RadioMsgArchive.isDirectory()) {
                 RadioMsgArchive.mkdir();
+            }
+            //Create RadioMsgScripts Directory
+            File RadioMsgScripts = new File(homePath + dirPrefix + dirScripts + separator);
+            if (!RadioMsgScripts.isDirectory()) {
+                RadioMsgScripts.mkdir();
             }
         } catch (Exception ex) {
             log.writelog("Problem when handling pskmail folder structure.", ex, true);

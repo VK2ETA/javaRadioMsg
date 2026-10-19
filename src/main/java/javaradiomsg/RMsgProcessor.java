@@ -48,8 +48,6 @@ import org.jsoup.safety.Safelist;
 
 public class RMsgProcessor {
 
-    static boolean onWindows = true;
-
     static String FileNameString = "";
 
     //File name of last message received for appending a newly received picture
@@ -714,6 +712,8 @@ public class RMsgProcessor {
         }
     }
 
+    
+    
     //Starts a new thread and register's with the file provider to alert of new 
     //   incoming files. If requested, send them over the air as they arrive
     // Format MsgSend: any file, with content^
@@ -1779,6 +1779,7 @@ public class RMsgProcessor {
         return null;
     }
      */
+    
     //Is the string representative of an email
     public static boolean isEmail(String destination) {
 
@@ -1789,6 +1790,12 @@ public class RMsgProcessor {
     public static boolean isCellular(String destination) {
 
         return destination.matches("^([\\w-]+=)?\\+?\\d{7,16}"); //"^\\+?\\d{8,16}"
+    }
+    
+    //Is the string representative of a forwarded Meshtastic message
+    public static boolean isMesh(String destination) {
+
+        return destination.matches("^([\\w-]+=)?((![0-9a-f]{8})|([\\w-]{1,10}))@mesh");
     }
 
     //Search through current list of via stations for the one contained in the message
@@ -2135,7 +2142,11 @@ public class RMsgProcessor {
                                     RMsgUtil.replyWithText(mMessage, replyString);
                                 }
                             }
+                            //Run script in protected folder
+                        } else if (mMessage.sms.startsWith("*run? ")) {
                             //Home Assistant get state of entity
+                            String[] parts = mMessage.sms.replace("*run? ", "").trim().split("\\s+");
+                            RMsgUtil.executeScript(mMessage, parts[0], java.util.Arrays.copyOfRange(parts, 1, parts.length));
                         } else if (mMessage.sms.startsWith("*get? ")) {
                             //Matches example: "*get? sensor.main_battery_ah"
                             if (matchMyCallWith(mMessage.via, false) && mMessage.to.equals("*")) {
@@ -2498,6 +2509,38 @@ public class RMsgProcessor {
                                         //RMsgUtil.replyWithText(mMessage, "Sorry...Missing Access Password");
                                     }
                                     //}
+                                } else if (isMesh(toStr)) {
+                                    if ((mMessage.crcValid || mMessage.crcValidWithRelayPW) && Main.wantRelayOverRadio) { //
+                                        RMsgUtil.sendAcks(true, useRsid);
+                                        //Valid formats are 
+                                        //    from=!<node Id> or <station callsign>
+                                        //    to=!<node Id>@mesh  OR  <alias=!node Id>@mesh OR <Channel name>@mesh  OR  <alias=<Channel Name>@mesh
+                                        // with channel name only containing up to 10 characters of "a-z0-9-_" 
+                                        //Ex: vk2eta:Ch1@mesh (vk2eta sending a channel wide message to channel Ch1 on mesh. Requires a via information.
+                                        //Ex: !ab123456:Ch1@mesh (mesh node id ab123456 sent message for channel Ch1 wide, received at gateway, forwarded by 
+                                        //         radio. Requires a via and relayed by (rly) field in the message)
+                                        //Note: for all forwarded mesh messages, the field "id:" contains the unique message id as received by the gateway 
+                                        Pattern mto = Pattern.compile("^([\\w-]+=)?((![0-9a-f]{8})|([\\w-]{1,10}))@mesh");
+                                        Matcher mtom = mto.matcher(toStr);
+                                        if (mtom.lookingAt()) {
+                                            String alias = mtom.group(1);
+                                            String nodeID = mtom.group(3);
+                                            String channelName = mtom.group(4);
+                                            if (alias != null) {
+                                                //Store alias maybe (check logic in email version
+                                            }
+                                            if (nodeID != null) {
+                                                //PKI direct message
+                                            } else if (channelName != null) {
+                                                //Channel broadcast
+                                                
+                                            }
+                                        }
+                                    } else {
+                                        RMsgUtil.sendAcks(false, false);
+                                        //We have an access password missing
+                                        //RMsgUtil.replyWithText(mMessage, "Sorry...Missing Access Password");
+                                    }
                                 } else if (toStr.equals("*") || mMessage.to.length() > 0) { //To ALL or at least one character call-sign or name? Send over Radio
                                     //Only forward properly received messages (allows relay over radio even if access password is not supplied)
                                     if ((mMessage.crcValid || mMessage.crcValidWithRelayPW) && Main.wantRelayOverRadio) {

@@ -64,9 +64,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import java.security.AccessController;
 import java.security.GeneralSecurityException;
-import java.security.PrivilegedAction;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -1416,22 +1414,10 @@ public class HttpRequest {
    * @return previous value
    */
   private static String setProperty(final String name, final String value) {
-    final PrivilegedAction<String> action;
     if (value != null)
-      action = new PrivilegedAction<String>() {
-
-        public String run() {
-          return System.setProperty(name, value);
-        }
-      };
+      return System.setProperty(name, value);
     else
-      action = new PrivilegedAction<String>() {
-
-        public String run() {
-          return System.clearProperty(name);
-        }
-      };
-    return AccessController.doPrivileged(action);
+      return System.clearProperty(name);
   }
 
   private HttpURLConnection connection = null;

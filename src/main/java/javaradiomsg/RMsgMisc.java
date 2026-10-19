@@ -16,8 +16,6 @@
 
 package javaradiomsg;
 
-import java.util.Calendar;
-import java.util.TimeZone;
 
 public class RMsgMisc {
 
@@ -145,5 +143,5 @@ public class RMsgMisc {
         }
         return s.substring(i);
     }
-    
+
 }

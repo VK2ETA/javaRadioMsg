@@ -24,8 +24,15 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URLDecoder;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 //tbf import android.graphics.Bitmap;
@@ -600,4 +607,166 @@ public class RMsgUtil {
     }
     
     
+    //Run a pre-made script on the server
+    static Process ScriptProcess = null;
+    static StringBuilder outBuffer = new StringBuilder(200);
+    static StringBuilder errBuffer = new StringBuilder(200);
+    static final java.util.concurrent.atomic.AtomicBoolean scriptRunning = new java.util.concurrent.atomic.AtomicBoolean(false);
+                                                                                                                                                                                
+    //Runs the script in its own thread so the main loop is not blocked                                                                                                             
+    //script is the bare script name (no path), args are optional                                                                                                                   
+    public static void executeScript(final RMsgObject mMessage, final String script, final String... args) {
+        if (!scriptRunning.compareAndSet(false, true)) {
+            RMsgUtil.replyWithText(mMessage, "A script is already running, try again later\n");
+            return;
+        }
+        final String[] scriptArgs = (args == null) ? new String[0] : args.clone();
+        Thread scriptThread = new Thread(() -> {
+            try {
+                runScript(mMessage, script, scriptArgs);
+            } finally {
+                scriptRunning.set(false);
+            }
+        }, "ScriptRunner");
+        scriptThread.setDaemon(true);
+        scriptThread.start();
+    }
+        
+    private static void runScript(RMsgObject mMessage, String script, String[] args) {
+        outBuffer = new StringBuilder(200);
+        errBuffer = new StringBuilder(200);
+
+        if (!isScriptInSafeDirectory(script, Main.dirScripts)) {
+            RMsgUtil.replyWithText(mMessage, "Can't run " + script + ": it must be in the Scripts directory of .pskmail\n");
+            return;
+        }
+
+        String fullScriptPath = Main.homePath + Main.dirPrefix + Main.dirScripts + Main.separator + script;
+        //Script path and each argument are separate list entries, so no shell parsing of the arguments                                                                             
+        java.util.List<String> cmd = new java.util.ArrayList<>();
+        if (Main.onWindows) {
+            cmd.add(fullScriptPath);
+        } else { //Linux: bash runs the script, "$@" in the script receives the arguments                                                                                           
+            cmd.add("bash");
+            cmd.add(fullScriptPath);
+        }
+        for (String arg : args) {
+            cmd.add(arg);
+        }
+        ProcessBuilder processBuilder = new ProcessBuilder(cmd);
+        try {
+            ScriptProcess = processBuilder.start();
+            //Launching using cmd.exe creates a subprocess for the script that is un-killable from Java                                                                             
+            //fldigiProc = Runtime.getRuntime().exec(fldigiPath);                                                                                                                   
+
+            //Prepare a thread to consume the Standard Output Stream                                                                                                                
+            Thread outputThread = new Thread(()
+                    -> readStream(ScriptProcess.getInputStream(), "STDOUT")
+            );
+            //Prepare a thread to consume the Standard Error Stream                                                                                                                 
+            Thread errorThread = new Thread(()
+                    -> readStream(ScriptProcess.getErrorStream(), "STDERR")
+            );
+            //Start both threads running in the background                                                                                                                          
+            outputThread.start();
+            errorThread.start();
+            //Wait for the external process to finish                                                                                                                               
+            int exitCode = ScriptProcess.waitFor();
+            //Wait for the reading threads to finish emptying the buffers                                                                                                           
+            outputThread.join();
+            errorThread.join();
+            //Process the result                                                                                                                                                    
+            System.out.println("\nProcess exited with code: " + exitCode);
+            String errString = errBuffer.toString();
+            //150 characters hard limit                                                                                                                                             
+            if (errString.length() > 150) {
+                errString = errString.substring(0, 150) + "...";
+            }
+            String outString = outBuffer.toString();
+            //150 characters hard limit                                                                                                                                             
+            if (outString.length() > 150) {
+                outString = outString.substring(0, 150) + "...";
+            }
+            if (!errString.isEmpty()) {
+                outString += "\n With error: " + errString;
+            }
+            RMsgUtil.replyWithText(mMessage, script + " says:\n" + outString + "\n");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            if (!errBuffer.toString().isEmpty()) {
+                RMsgUtil.replyWithText(mMessage, "Error running " + script + ": " + errBuffer.toString());
+            }
+            e.printStackTrace();
+        }
+    }
+
+
+    
+    // Helper method to read a stream line-by-line
+    public static void readStream(InputStream inputStream, String streamType) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // Route or process the data differently depending on the source stream
+                if ("STDERR".equals(streamType)) {
+                    errBuffer.append(line).append("\n");
+                    System.err.println("[" + streamType + "] " + line);
+                } else {
+                    outBuffer.append(line).append("\n");
+                    System.out.println("[" + streamType + "] " + line);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading " + streamType + " stream: " + e.getMessage());
+        }
+    }
+
+    
+    //Checks that the final decoded path is the wanted one (files cannot be in another directory like with a "../AnotherDir/file.xyz" request)
+    //Also checks it is not a symbolic link and not a directory, but a real file
+    public static boolean isScriptInSafeDirectory(String userRawInput, String safeDir) {
+        boolean isParentCorrect = false;
+        boolean fileExists = false;
+        final Path strictRootDir = Paths.get(Main.homePath + Main.dirPrefix + safeDir).toAbsolutePath().normalize();
+
+        if (userRawInput == null || userRawInput.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            //Defeat %xx Hex/URL Injection Attacks
+            String decodedInput = URLDecoder.decode(userRawInput, StandardCharsets.UTF_8);
+
+            //Defeat Directory Traversal (../../) by isolating ONLY the filename
+            Path rawPath = Paths.get(decodedInput);
+            Path isolatedFileName = rawPath.getFileName();
+            if (isolatedFileName == null) {
+                return false;
+            }
+            Path parentPath = rawPath.getParent();
+            //Verification Check: 
+            // - Does the parent match exactly?
+            // - Does the file actually exist at that location?
+            // - Is it a regular file (not a symlink or directory)?
+            if (parentPath == null) {
+                //Just a file name, no path
+                isParentCorrect = true;
+                fileExists = Files.isRegularFile(Paths.get(strictRootDir.toString() + Main.separator + isolatedFileName.toString()), LinkOption.NOFOLLOW_LINKS);
+            } else {
+                Path combinedPath = strictRootDir.resolve(parentPath).normalize();
+                Path fullPath = combinedPath.resolve(isolatedFileName).normalize();
+
+                isParentCorrect = combinedPath.equals(strictRootDir);
+                fileExists = Files.isRegularFile(fullPath, LinkOption.NOFOLLOW_LINKS);
+            }
+
+            return isParentCorrect && fileExists;
+
+        } catch (Exception e) {
+            // Treat any parsing errors or malformed input as unsafe
+            return false;
+        }
+    }
+
 }
