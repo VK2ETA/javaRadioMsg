@@ -1199,7 +1199,7 @@ public class ServerMail {
 
     }
 
-    //Compresses a web page data and provides the exchange initiation string (">FM:") to send to the client.
+    //Compresses a web page or other string data and provides the exchange initiation string (">FM:") to send to the client.
     // Text content only.
     public static String tgetZip(String webPage) {
         String returnString = "";

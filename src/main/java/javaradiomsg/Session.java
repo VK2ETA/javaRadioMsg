@@ -1511,8 +1511,8 @@ public class Session {
                 String caller = Main.ttyCaller;
                 //Outpending folder first
                 if (partialFilesDelete("Outpending", caller, deleteToken)) {
-                    Main.mainwindow += (Main.myTime() + " File Sent...\n");
-                    Main.filesTextArea += " File Sent...\n";
+                    Main.mainwindow += (Main.myTime() + " Data Sent...\n");
+                    Main.filesTextArea += " Data Sent...\n";
                 }
             } else { //I am a client, either uploading a file or an email
                 //Check for email uploads first
@@ -3340,7 +3340,7 @@ public class Session {
     }
 
     private static void runScript(String script, String[] args) {
-        outBuffer = new StringBuilder(200);
+        outBuffer = new StringBuilder(10000);
         errBuffer = new StringBuilder(200);
 
         if (!RMsgUtil.isScriptInSafeDirectory(script, Main.dirScripts)) {
@@ -3362,6 +3362,7 @@ public class Session {
         }
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         try {
+            processBuilder.redirectErrorStream(true);
             ScriptProcess = processBuilder.start();
             //Launching using cmd.exe creates a subprocess for the script that is un-killable from Java                                                                             
             //fldigiProc = Runtime.getRuntime().exec(fldigiPath);                                                                                                                   
@@ -3371,38 +3372,46 @@ public class Session {
                     -> readStream(ScriptProcess.getInputStream(), "STDOUT")
             );
             //Prepare a thread to consume the Standard Error Stream                                                                                                                 
-            Thread errorThread = new Thread(()
-                    -> readStream(ScriptProcess.getErrorStream(), "STDERR")
-            );
+            //Thread errorThread = new Thread(()
+            //        -> readStream(ScriptProcess.getErrorStream(), "STDERR")
+            //);
             //Start both threads running in the background                                                                                                                          
             outputThread.start();
-            errorThread.start();
+            //errorThread.start();
             //Wait for the external process to finish                                                                                                                               
             int exitCode = ScriptProcess.waitFor();
             //Wait for the reading threads to finish emptying the buffers                                                                                                           
             outputThread.join();
-            errorThread.join();
+            //errorThread.join();
             //Process the result                                                                                                                                                    
             System.out.println("\nProcess exited with code: " + exitCode);
-            String errString = errBuffer.toString();
-            //150 characters hard limit                                                                                                                                             
-            if (errString.length() > 200) {
-                errString = errString.substring(0, 200) + "...";
-            }
+            //String errString = errBuffer.toString();
+            //200 characters hard limit                                                                                                                                             
+            //if (errString.length() > 200) {
+            //    errString = errString.substring(0, 200) + "...";
+            //}
             String outString = outBuffer.toString();
-            //150 characters hard limit                                                                                                                                             
-            if (outString.length() > 500) {
-                outString = outString.substring(0, 500) + "...";
+            //10,000 characters hard limit                                                                                                                                             
+            if (outString.length() > 10000) {
+                outString = outString.substring(0, 10000) + "...";
             }
-            if (!errString.isEmpty()) {
-                outString += "\n With error: " + errString;
-            }
+            //if (!errString.isEmpty()) {
+            //    outString += "\n With error: " + errString;
+            //}
             StringBuilder arguments = new StringBuilder(100);
             for (String argStr : args) {
                 String thisArg = " " + argStr;
                 arguments.append(thisArg);
             }
-            Main.txText += "\n" + script + " " + arguments.toString() + " says:\n" + outString;
+            if (outString.length() < 400) {
+                //Smal output text, send as plain text
+                Main.txText += "\n" + script + " " + arguments.toString() + " says:\n" + outString;
+            } else {
+                //Otherwise send compressed
+                outString = ServerMail.tgetZip(outString);
+                Main.txText += "\n" + script + " " + arguments.toString() + " says:\n" + outString;
+            }
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (IOException e) {

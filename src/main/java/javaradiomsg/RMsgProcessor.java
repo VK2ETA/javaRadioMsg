@@ -1117,30 +1117,34 @@ public class RMsgProcessor {
         RMsgObject recMessage;
         DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'_'HHmmss");
         formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        //Calendar localCalendar = Calendar.getInstance(TimeZone.getDefault());
+        Calendar localCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         //Date dateNow = localCalendar.getTime();
         Date recMsgDate = null;
+        //Go back one day for emails as IMAP server filter goes by date not date and time. We filter out the extra messages below.
+        localCalendar.add(Calendar.DAY_OF_MONTH, -1);
+        Date searchMsgDate = localCalendar.getTime(); //Defaults to Now -1 day in UTC time
         //If requested since last QTC, find the previous one first and extract the time filter
         if (numberOf == -1 && forLast == 0L) {
             //Iterate from the 2nd last message received, backwards (back in time), skipping just received "*qtc?" message
             for (int i = listCount - 2; i >= 0; i--) {
                 recMessage = Main.mainui.msgDisplayList.getItemMessage(i);
-                //      Must be a received message
-                if (matchThisCallWith(mMessage.from, recMessage.from, false)
-                        && recMessage.sms.startsWith("*qtc? ")) { //Ignore simple qtc requests "*qtc?"
-                    //Extract time to use as filter on the imap email list
-                    try {
-                        recMsgDate = formatter.parse(recMessage.fileName.replaceAll(".txt", ""));
-                    } catch (ParseException e) {
-                        //Bad date format, ignore
-                    }
-                    break; //No point in looking any further
+                //Extract time to use as filter on the imap email list (until first "*qtc? x" OR the first message in the list if qtc is not found)
+                try {
+                    recMsgDate = formatter.parse(recMessage.fileName.replaceAll(".txt", ""));
+                    //Back one day as described above
+                    localCalendar.setTime(recMsgDate);
+                    //Go back one full day as the email query works on date only, not date and time
+                    localCalendar.add(Calendar.DAY_OF_MONTH, -1);
+                    searchMsgDate = localCalendar.getTime();
+                } catch (ParseException e) {
+                    //Bad date format, ignore
                 }
-            }
-            //No previous matching "*qtc?" message found AND we wanted to find one, return an empty list
-            if (!((numberOf == -1 && forLast == 0L && recMsgDate != null)
-                    || numberOf != -1 || forLast != 0L)) {
-                return resendList;
+                //Found previous QTC message (in case we request all messages since last request).
+                if (matchThisCallWith(mMessage.from, recMessage.from, false)
+                        && recMessage.sms.startsWith("*qtc?")
+                        && !recMessage.sms.trim().equals("*qtc?")) { //Ignore simple qtc requests like "*qtc? ", trimmed to "*qtc?"
+                    break; //Found it, No point in looking any further
+                }
             }
         } else if (forLast != 0L) {
             //We have a time based request
